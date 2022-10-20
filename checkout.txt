@@ -1,0 +1,67 @@
+<?php
+use Phppot\CheckoutService;
+use Phppot\Config;
+use Phppot\MailService;
+require_once __DIR__ . '/../lib/CheckoutService.php';
+require_once __DIR__ . '/../config/Config.php';
+require_once __DIR__ . '/../lib/MailService.php';
+$configModel = new Config();
+$configResult = $configModel->getProduct();
+$checkoutService = new CheckoutService();
+$mailService = new MailService();
+$orderId = $checkoutService->getToken();
+$productQuantity = 1;
+if (! empty($_POST["productQuantity"])) {
+    $productQuantity = $_POST["productQuantity"];
+}
+$checkoutService->insertOrder($orderId, $_POST["userName"], $_POST["userEmail"], Config::CURRENCY_CODE, $configResult["price"]);
+
+$checkoutService->insertOrderItems($orderId, $configResult["name"], $productQuantity, $configResult["price"]);
+
+$orderResult = $checkoutService->getOrder($orderId);
+$orderItemResult = $checkoutService->getOrderItems($orderId);
+$recipientArr = array(
+    'email' => $orderResult[0]["email"]
+);
+$mailService->sendUserEmail($orderResult, $recipientArr);
+$mailService->sendAdminEmail($orderItemResult, $orderResult);
+?>
+This is a complete code of the CheckoutService class in PHP.
+
+It prepares the queries to insert and read the order and order-item entries.
+
+Also, it includes some utility functions to generate a hash token for using it as an order reference id.
+
+lib/CheckoutService.php
+
+<?php
+namespace Phppot;
+
+require_once __DIR__ . '/../config/Config.php';
+
+class CheckoutService
+{
+
+    private $dbConn;
+
+    public function __construct()
+    {
+        require_once __DIR__ . '/../config/DataSource.php';
+        $this->dbConn = new DataSource();
+    }
+
+    function insertOrder($orderId, $name, $email, $currency, $amount)
+    {
+        $query = "INSERT INTO tbl_order (order_id, name, email, currency, amount) VALUES (?, ?, ?, ?, ?)";
+        $paramType = "ssssd";
+        $paramValue = array(
+            $orderId,
+            $name,
+            $email,
+            $currency,
+            $amount
+        );
+
+        $insertId = $this->dbConn->insert($query, $paramType, $paramValue);
+        return $insertId;
+    }

@@ -1,0 +1,29 @@
+.php
+
+<?php
+namespace Phppot;
+
+/**
+ * This class contains the configuration options
+ */
+class Config
+{
+
+    const ADMIN_EMAIL = 'admin@gmail.com';
+
+    const CURRENCY_CODE = 'USD';
+
+    const DISPLAY_QUANTITY_INPUT = true;
+
+    public static function getProduct()
+    {
+        $products = array(
+            "productId" => 1,
+            "name" => "FinePix Pro2 3D Camera",
+            "price" => 1500.00,
+            "imageUrl" => 'images/camera.jpg'
+        );
+
+        return $products;
+    }
+}
